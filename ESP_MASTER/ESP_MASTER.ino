@@ -10,19 +10,14 @@
 */
 
 
-
 #include <espnow.h>
 #include "EspNowSetup.h"
 #include "WifiSetup.h"
 #include "WebServerSetup.h"
-#include "RTCSetup.h"
 
 // VARIABILI GLOBALI
 
 ESP8266WebServer server(80);
-RTC_DS3231 rtc;
-
-
 
 unsigned long timerDelay;
 bool realTimeMode;
@@ -33,7 +28,6 @@ struct_message incomingReadings;
 // REPLACE WITH THE MAC Address of your receiver 
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t slaveMacAddress[] = {0xDC, 0x4F, 0x22, 0x55, 0x15, 0x06};
-uint8_t masterMacAddress[] = {0x8C, 0xAA, 0xB5, 0x7C, 0x6A, 0x17};  //espmaster MAC address = 8c:aa:b5:7c:6a:17
 
 // LASCIARE NEL .ino altrimenti crasha
 void initEspNow(){
@@ -65,10 +59,9 @@ void setup() {
   // Init Serial Monitor
   Serial.begin(9600);
   connectWifi();
-  
-  //initRTC();
   initEspNow();
   setupWebServer();
+  
 }
  
 void loop() {
