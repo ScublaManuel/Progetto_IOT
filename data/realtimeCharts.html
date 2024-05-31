@@ -1,0 +1,140 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Rui Santos - Complete project details at https://RandomNerdTutorials.com
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files.
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software. -->
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+        <style>
+            body {
+                min-width: 310px;
+                max-width: 800px;
+                height: 400px;
+                margin: 0 auto;
+            }
+            h2 {
+                font-family: Arial;
+                font-size: 2.5rem;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>ESP Weather Station</h2>
+        <div id="chart-temperature" class="container"></div>
+        <div id="chart-humidity" class="container"></div>
+    </body>
+    <script>
+        // Create a chart
+var chartT = Highcharts.chart('chart-temperature', {
+  chart: {
+    type: 'line',
+    animation: Highcharts.svg, // don't animate in old IE
+    marginRight: 10
+  },
+  title: {
+    text: 'Real-time Temperature Chart'
+  },
+  xAxis: {
+    type: 'datetime',
+    tickPixelInterval: 150
+  },
+  yAxis: {
+    title: {
+      text: 'Temperature (°C)'
+    },
+    plotLines: [{
+      value: 0,
+      width: 1,
+      color: '#808080'
+    }]
+  },
+  tooltip: {
+    formatter: function() {
+      return '<b>' + this.series.name + '</b><br/>' +
+        Highcharts.dateFormat('%H:%M:%S', this.x) + '<br/>' +
+        Highcharts.numberFormat(this.y, 2) + '°C';
+    }
+  },
+  legend: {
+    enabled: false
+  },
+  exporting: {
+    enabled: false
+  },
+  series: [{
+    name: 'Temperature',
+    data: []
+  }]
+});
+    
+    /* var chartH = new Highcharts.Chart({
+        chart:{ renderTo:'chart-humidity' ,defaultSeriesType: 'spline',},
+        title: { text: 'Humidity' },
+        series: [{
+            showInLegend: false,
+            data: []
+        }],
+        plotOptions: {
+            line: { animation: false,
+                dataLabels: { enabled: true }
+            },
+            series: { color: '#059e8a' }
+        },
+        xAxis: { type: 'datetime',
+        dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+        minPadding: 0.2,
+        maxPadding: 0.2,
+        title: {
+            text: 'Humidity',
+            margin: 80
+        }
+    },
+    credits: { enabled: false }
+}); */
+
+
+function updateChart(chartName,x,y) {
+    var redraw = true;
+    var shift = true;
+    var animate = true;
+    if(chartName.series[0].data.length > 40) {
+        chartName.series[0].addPoint([x, y], redraw, shift, animate);
+    } else {
+        chartName.series[0].addPoint([x, y], redraw, !shift, animate);
+    }
+    console.log(chartName.series[0].data)
+}
+
+
+/* Every 30 seconds it makes a request to the /temperature URL 
+to get the temperature readings from your ESP32 or ESP8266*/
+setInterval(function ( ) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var myObj = JSON.parse(this.responseText);
+            console.log(myObj);
+            var temp = myObj.temperature;
+            var hum = myObj.humidity;
+            var t = (new Date()).getTime();
+            if (chartT){
+                updateChart(chartT,t,temp);
+                console.log('Updating chartT')
+            }
+            //updateChart(chartH,t,hum);
+        }
+    };
+    xhttp.open("GET", "/readings", true);
+    xhttp.send();
+}, 10000 ) ;
+
+
+</script>
+</html>

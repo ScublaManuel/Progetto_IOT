@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronologia</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+    <script src="chart/chart.min.js"></script>
+    <script src="chart/chartjs-plugin-annotation.min.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cronologia <a href="settings.html" id="settings-link"><i class="fas fa-cogs" id="settings-icon"></i></a></h1>
+        </header>
+                
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="env_sensor.html">Ambiente</a></li>
+                <li><a href="soil_sensor.html">Terreno</a></li>
+                <li><a href="history.html">Cronologia</a></li> <!-- Modifica per collegare alla pagina Cronologia -->
+            </ul>
+        </nav>
+        <main id="esp-container">
+            
+        </main>
+    </div>
+
+    <script>
+
+
+
+function updateChart(chartName,x,y){
+
+}
+
+
+
+/* Every 30 seconds it makes a request to the /temperature URL 
+to get the temperature readings from your ESP32 or ESP8266*/
+setInterval(function ( ) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var myObj = JSON.parse(this.responseText);
+            console.log(myObj);
+            var temp = myObj.temperature;
+            var hum = myObj.humidity;
+            var t = (new Date()).getTime();
+            if (chartT){
+                updateChart(chartT,t,temp);
+                console.log('Updating chartT')
+            }
+            //updateChart(chartH,t,hum);
+        }
+    };
+    xhttp.open("GET", "/readings", true);
+    xhttp.send();
+}, 10000 ) ;
+
+var espSensorData = [
+        { 
+            name: "ESP1", 
+            temperature: [25, 24, 26, 23], // Dati di esempio per la temperatura nel tempo
+            humidity: [60, 55, 58, 52], // Dati di esempio per l'umidità nel tempo
+            valveStatus: "Attiva", 
+            desiredHumidity: "50%", 
+            light: "50 Lux", 
+            wind: "10 km/h", 
+            pressure: "1013 hPa", 
+            airQuality: "Buona" 
+        },
+        { 
+            name: "ESP2", 
+            temperature: [24, 23, 25, 22], 
+            humidity: [55, 50, 52, 48], 
+            valveStatus: "Disattiva", 
+            desiredHumidity: "55%", 
+            light: "60 Lux", 
+            wind: "12 km/h", 
+            pressure: "1015 hPa", 
+            airQuality: "Moderata" 
+        },
+        // Aggiungi altri dati dei sensori ESP qui...
+    ];
+
+// Funzione per generare i riquadri e i grafici per ogni sensore ESP
+function generateESPBoxes() {
+    
+
+    // Definisci una serie di colori per i grafici
+    var colors = ["rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)", "rgba(255, 206, 86, 1)", "rgba(75, 192, 192, 1)"];
+
+    var espContainer = document.getElementById("esp-container");
+
+    // Creazione del riquadro generale per i grafici aggregati
+    var generalBox = document.createElement("div");
+    generalBox.classList.add("esp-box");
+    var generalTitle = document.createElement("h2");
+    generalTitle.textContent = "Generale";
+    generalBox.appendChild(generalTitle);
+    var generalToggleButton = document.createElement("button");
+    generalToggleButton.textContent = "Mostra/Nascondi";
+    generalToggleButton.classList.add("toggle-button");
+    generalBox.appendChild(generalToggleButton);
+    var generalCanvasContainer = document.createElement("div");
+    generalCanvasContainer.classList.add("canvas-container");
+    generalBox.appendChild(generalCanvasContainer);
+
+    // Crea grafici per i dati aggregati
+    Object.keys(espSensorData[0]).forEach(function(key, index) {
+        if (key !== "name" && key !== "valveStatus" && key !== "desiredHumidity") {
+            var canvas = document.createElement("canvas");
+            canvas.width = 400;
+            canvas.height = 200;
+            generalCanvasContainer.appendChild(canvas);
+            var ctx = canvas.getContext("2d");
+
+            // Crea il dataset per il tipo di dato aggregato
+            var datasets = [];
+            espSensorData.forEach(function(esp, i) {
+                datasets.push({
+                    label: esp.name,
+                    data: esp[key],
+                    borderColor: colors[i % colors.length],
+                    borderWidth: 1,
+                    fill: false
+                });
+            });
+
+            // Crea il grafico per il dato aggregato
+            var chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: ["1", "2", "3", "4"],
+                    datasets: datasets
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: key.charAt(0).toUpperCase() + key.slice(1)
+                        },
+                        annotation: {
+                            annotations: [{
+                                type: 'line',
+                                mode: 'vertical',
+                                scaleID: 'x',
+                                value: '2',
+                                borderColor: 'red',
+                                borderWidth: 2,
+                                label: {
+                                    content: 'Test Annotazione',
+                                    enabled: true
+                                }
+                            }]
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                            },
+                        }
+                        
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    generalToggleButton.addEventListener("click", function() {
+        if (generalCanvasContainer.style.display === "none" || generalCanvasContainer.style.display === "") {
+            generalCanvasContainer.style.display = "block";
+        } else {
+            generalCanvasContainer.style.display = "none";
+        }
+    });
+
+    espContainer.appendChild(generalBox);
+
+    // Creazione dei riquadri e dei grafici per ogni sensore ESP
+    espSensorData.forEach(function(esp, index) {
+        var espBox = document.createElement("div");
+        espBox.classList.add("esp-box");
+
+        var espTitle = document.createElement("h2");
+        espTitle.textContent = esp.name;
+        espBox.appendChild(espTitle);
+
+        var toggleButton = document.createElement("button");
+        toggleButton.textContent = "Mostra/Nascondi";
+        toggleButton.classList.add("toggle-button");
+        espBox.appendChild(toggleButton);
+
+        var canvasContainer = document.createElement("div");
+        canvasContainer.classList.add("canvas-container");
+        espBox.appendChild(canvasContainer);
+
+        Object.keys(esp).forEach(function(key) {
+            if (key !== "name" && key !== "valveStatus" && key !== "desiredHumidity") {
+                var canvas = document.createElement("canvas");
+                canvas.width = 400;
+                canvas.height = 200;
+                canvasContainer.appendChild(canvas);
+                var ctx = canvas.getContext("2d");
+
+                var chart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: ["1", "2", "3", "4"],
+                        datasets: [{
+                            label: "",
+                            data: esp[key],
+                            borderColor: colors[index % colors.length],
+                            borderWidth: 1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: key.charAt(0).toUpperCase() + key.slice(1)
+                            },
+                            annotation: {
+                                annotations: [{
+                                    type: 'line',
+                                    mode: 'vertical',
+                                    scaleID: 'x',
+                                    value: '2',
+                                    borderColor: 'red',
+                                    borderWidth: 2,
+                                    label: {
+                                        content: 'Test Annotazione',
+                                        enabled: true
+                                    }
+                                }]
+                            },
+                            zoom: {
+                                zoom: {
+                                    wheel: {
+                                        enabled: true,
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'x',
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: 'x',
+                                },
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        toggleButton.addEventListener("click", function() {
+            if (canvasContainer.style.display === "none" || canvasContainer.style.display === "") {
+                canvasContainer.style.display = "block";
+            } else {
+                canvasContainer.style.display = "none";
+            }
+        });
+
+        espContainer.appendChild(espBox);
+    });
+}
+
+
+
+// Chiama la funzione per generare i riquadri e i grafici quando la pagina è caricata
+window.addEventListener("load", generateESPBoxes);
+
+    </script>
+</body>
+</html>

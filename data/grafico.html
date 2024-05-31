@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #F7F7F7;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #FFFFFF;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+        
+        nav ul li {
+            display: inline;
+        }
+        
+        nav ul li a,
+        .nav-item button {
+            text-decoration: none;
+            padding: 10px;
+            color: #26A69A;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        
+        .nav-item button.active {
+            background-color: #26A69A;
+            color: #FFFFFF;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #555555;
+        }
+        
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 500px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+        }
+        
+        input[type="date"],
+        input[type="time"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #26A69A;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Grafico</h1>
+            <nav> Qui forse è da togliere l'elenco e mettere un nav come in index per vederli in orizzontale
+                <ul>
+                    <li class="nav-item"><button class="active" onclick="changeTimeRange('1h')">1 Hour</button></li>
+                    <li class="nav-item"><button onclick="changeTimeRange('6h')">6 Hours</button></li>
+                    <li class="nav-item"><button onclick="changeTimeRange('12h')">12 Hours</button></li>
+                    <li class="nav-item"><button onclick="changeTimeRange('1d')">1 Day</button></li>
+                    <li class="nav-item"><button onclick="changeTimeRange('7d')">7 Days</button></li>
+                    <li class="nav-item"><button onclick="toggleRealtime(15000)">Live</button></li>
+                    <li class="nav-item"><button onclick="openTimePicker()"><i class="fas fa-calendar-alt"></i></button></li>
+                </ul>
+            </nav>
+        </header>
+        <canvas id="temperatureChart"></canvas>
+    </div>
+    
+    <!-- Modal per la selezione del range temporale -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTimePicker()">&times;</span>
+            <label for="startDate" class="label">Start Date:</label>
+            <input type="date" id="startDate" name="startDate" required>
+            <label for="startTime" class="label">Start Time:</label>
+            <input type="time" id="startTime" name="startTime" required>
+            <label for="endDate" class="label">End Date:</label>
+            <input type="date" id="endDate" name="endDate" required>
+            <label for="endTime" class="label">End Time:</label>
+            <input type="time" id="endTime" name="endTime" required>
+            <button onclick="applyDateTime()">Apply</button>
+        </div>
+    </div>
+    
+    <script>
+        
+        function csvToArr(csvString) {
+            const rows = csvString.split('\r\n');
+            const headers = rows[0].split(',');
+            const arrayOfObjects = rows.slice(1).map(row => {
+                const values = row.split(',');
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = values[index];
+                });
+                return obj;
+            });
+            return arrayOfObjects;
+        }
+        
+        
+        
+        function getEspSensorData() {
+            console.log("getEspSensorData");
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://192.168.1.43/readings', false);
+            xhr.responseType = 'text/csv';
+            xhr.onload = function() {
+            if (xhr.status === 200) {
+                const csvData = xhr.responseText;
+                console.log("Response Data Received",csvData);
+                const columnValues = csvToArr(csvData);
+                console.log(columnValues);
+                var espData = espSensorData[0];
+                espData["time"] = columnValues.map(d => d["time"]);
+                espData["temperature"] = columnValues.map(d => d["temp"]);
+                espData["hum"] = columnValues.map(d => d["hum"]);
+                espData["bri"] = columnValues.map(d => d["bri"]);
+                espData["bat"] = columnValues.map(d => d["bat"]);
+                espData["irr"] = columnValues.map(d => d["irr"]);
+                espData["soil"] = columnValues.map(d => d["soil"]);
+                espData["water"] = columnValues.map(d => d["water"]);
+                espSensorData[0] = espData;
+                console.log(espSensorData[0]);
+                // Now you can use the tableData array to populate a table or do whatever you need with the CSV data
+            }
+            };
+            xhr.send();
+        }
+        
+        /* 
+        // ogni 30 secondi esp master invia i nuovi dati al http client
+        source.addEventListener('new_readings', function(e) {
+            console.log("Ricevuti nuovi dati: new_readings=", e.data);
+            var myObj = JSON.parse(e.data);
+            console.log(myObj);
+            gaugeTemp.value = myObj.temperature;
+            gaugeHum.value = myObj.humidity;
+        }, false); */
+        
+        var espSensorData = [
+        { 
+            name: "ESP1", 
+            temperature: [
+            24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1], 
+            time: [
+            "2024-05-25T10:00:00", "2024-05-25T7:01:00", "2024-05-29T8:02:00", "2024-05-29T9:03:00", "2024-05-29T10:04:00", "2024-05-29T10:05:00", "2024-05-29T10:06:00", "2024-05-29T10:07:00", "2024-05-29T10:08:00", "2024-05-29T10:09:00", 
+            "2024-05-29T10:10:00", "2024-05-29T10:11:00", "2024-05-29T10:12:00", "2024-05-29T10:13:00", "2024-05-29T10:14:00", "2024-05-29T10:15:00", "2024-05-29T10:16:00", "2024-05-29T10:17:00", "2024-05-29T10:18:00", "2024-05-29T10:19:00", 
+            "2024-05-29T10:20:00", "2024-05-29T10:21:00", "2024-05-29T10:22:00", "2024-05-29T16:23:00"]
+        }
+        ];
+        
+        getEspSensorData();
+        console.log("espSensorData after get request: ",espSensorData);
+        
+        
+        
+        // Popolare i dati per il grafico
+        var temperatureData = espSensorData[0].temperature;
+        var timeData = espSensorData[0].time;
+        
+        // Ottieni il riferimento al canvas
+        var canvas = document.getElementById('temperatureChart');
+        var ctx = canvas.getContext('2d');
+        
+        // Disegna il grafico
+        var chart;
+        
+        function drawChart(timeRange) {
+            var now = new Date();
+            var timeInterval = {
+                '1h': 60 * 60 * 1000,
+                '6h': 6 * 60 * 60 * 1000,
+                '12h': 12 * 60 * 60 * 1000,
+                '1d': 24 * 60 * 60 * 1000,
+                '7d': 7 * 24 * 60 * 60 * 1000
+            }[timeRange];
+            
+            var startTime = now - timeInterval;
+            
+            var labels = [];
+            var data = [];
+            for (var i = 0; i < timeData.length; i++) {
+                var timestamp = new Date(timeData[i]).getTime();
+                if (timestamp >= startTime) {
+                    labels.push(timeData[i]);
+                    data.push(temperatureData[i]);
+                }
+            }
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Temperature',
+                        data: data,
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                displayFormats: {
+                                    minute: 'h:mm a'
+                                }
+                            }/* ,
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            } */
+                        }],
+                        yAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Temperature (°C)'
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+        
+        function changeTimeRange(timeRange) {
+            document.querySelectorAll('.nav-item button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector('.nav-item button[onclick="changeTimeRange(\'' + timeRange + '\')"]').classList.add('active');
+            drawChart(timeRange);
+        }
+        
+        function toggleRealtime(timerDelay) {
+            var realTimeButton = document.querySelector('.nav-item button[onclick="toggleRealtime()"]');
+            var isRealtime = !realTimeButton.classList.contains('active');
+            
+            if (isRealtime) {
+                realTimeButton.classList.add('active');
+                // Qui puoi inserire la logica per avviare l'aggiornamento in tempo reale
+                console.log('Real-time mode activated');
+                
+                
+            } else {
+                realTimeButton.classList.remove('active');
+                // Qui puoi inserire la logica per disattivare l'aggiornamento in tempo reale
+                console.log('Real-time mode deactivated');
+            }
+            // Avvisare esp server con
+            // Invia i dati direttamente all'ESP
+            fetch('/realTimeMode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({realTime:isRealtime,timeIntervalMillis:timerDelay})
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch((error) => console.error('Error:', error));
+            
+        }
+        
+        function openTimePicker() {
+            // Mostra la finestra modale per la selezione della data e dell'ora
+            var modal = document.getElementById('myModal');
+            modal.style.display = "block";
+        }
+        
+        function closeTimePicker() {
+            // Chiudi la finestra modale
+            var modal = document.getElementById('myModal');
+            modal.style.display = "none";
+        }
+        
+        function applyDateTime() {
+            // Applica la data e l'ora selezionate
+            var startDate = document.getElementById('startDate').value;
+            var startTime = document.getElementById('startTime').value;
+            var endDate = document.getElementById('endDate').value;
+            var endTime = document.getElementById('endTime').value;
+            
+            var startDateTime = new Date(startDate + 'T' + startTime);
+            var endDateTime = new Date(endDate + 'T' + endTime);
+            
+            console.log('Start date and time:', startDateTime);
+            console.log('End date and time:', endDateTime);
+            
+            // Filtra i dati in base all'intervallo di date selezionato
+            var labels = [];
+            var data = [];
+            for (var i = 0; i < timeData.length; i++) {
+                var timestamp = new Date(timeData[i]).getTime();
+                if (timestamp >= startDateTime.getTime() && timestamp <= endDateTime.getTime()) {
+                    labels.push(timeData[i]);
+                    data.push(temperatureData[i]);
+                }
+            }
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Temperature',
+                        data: data,
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        xAxes: [{
+                            type: 'time',
+                            time: {
+                                displayFormats: {
+                                    minute: 'h:mm a'
+                                }
+                            },
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Time'
+                            }
+                        }],
+                        yAxes: [{
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'Temperature (°C)'
+                            }
+                        }]
+                    }
+                }
+            });
+            
+            // Chiudi la finestra modale
+            closeTimePicker();
+        }
+        
+        drawChart('1d');
+    </script>
+</body>
+</html>
