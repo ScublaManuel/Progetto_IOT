@@ -1,0 +1,229 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #F7F7F7;
+}
+
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #FFFFFF;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline;
+}
+
+nav ul li a {
+    text-decoration: none;
+    padding: 10px;
+    color: #26A69A;
+}
+
+nav ul li a:hover {
+    background-color: #26A69A;
+    color: #FFFFFF;
+}
+
+/* Aggiornamento per far sì che il riquadro si trovi sotto la sezione nav */
+nav {
+    margin-bottom: 20px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #555555;
+}
+
+/* Stili per i riquadri delle sezioni */
+.section-container {
+    margin-bottom: 20px; /* Spazio inferiore */
+    padding: 10px; /* Spazio interno */
+    border: 1px solid #CCC; /* Bordo grigio */
+    border-radius: 5px; /* Bordi arrotondati */
+}
+
+
+/* Stili per i messaggi di errore */
+.error-message {
+    padding: 5px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+/* Stili per i messaggi di errore di diversi tipi */
+.error-message.error-green {
+    background-color: lightgreen; /* Sfondo verde per errori di tipo green */
+}
+
+.error-message.error-orange {
+    background-color: orange; /* Sfondo arancione per errori di tipo orange */
+}
+
+.error-message.error-red {
+    background-color: lightcoral; /* Sfondo rosso per errori di tipo red */
+}
+
+
+/* Stili per l'icona dell'ingranaggio */
+.fa-cogs {
+    color: #26A69A;
+    cursor: pointer;
+}
+
+/* Stili per il link delle impostazioni */
+#settings-link {
+    float: right; /* Posiziona il link a destra */
+}
+
+/* Stili per l'icona della casa */
+.fa-home {
+    color: #26A69A; /* Colore dell'icona */
+    cursor: pointer; /* Cambia il cursore al passaggio sopra l'icona */
+    float: right; /* Posiziona l'icona a destra */
+}
+
+/* Stili per le icone dell'alimentazione */
+#power-source-icons {
+    margin-top: 10px; /* Aggiunge spazio tra le icone */
+}
+
+#electric-power-icon,
+#battery-power-icon {
+    font-size: 24px; /* Dimensione dell'icona */
+    margin-right: 10px; /* Aggiunge spazio tra le icone */
+}
+
+/* Stili per i riquadri dei sensori ESP */
+.esp-box {
+    border: 1px solid #ccc; /* Bordo grigio */
+    border-radius: 5px; /* Bordi arrotondati */
+    padding: 15px; /* Spazio interno */
+    margin-bottom: 20px; /* Spazio inferiore */
+    background-color: #f9f9f9; /* Colore di sfondo */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Ombra */
+}
+
+.esp-box h3 {
+    margin-top: 0; /* Rimuovi il margine superiore dal titolo */
+}
+
+.esp-box p {
+    margin: 5px 0; /* Margine superiore e inferiore per i paragrafi */
+}
+
+/* Stili per i riquadri dei dati dei sensori ESP */
+.esp-data-container {
+    display: none; /* Nasconde i dati del sensore ESP per impostazione predefinita */
+    padding: 10px; /* Aggiunge spazio interno */
+    margin-top: 10px; /* Aggiunge spazio superiore */
+    background-color: #E0E0E0; /* Colore di sfondo */
+    border: 1px solid #ccc; /* Bordo grigio */
+    border-radius: 5px; /* Bordi arrotondati */
+}
+
+.canvas-container {
+    display: none;
+}
+
+/* Stili per il contenitore dell'impostazione dell'umidità desiderata */
+#desired-humidity-container {
+    display: none; /* Nasconde il contenitore dell'impostazione dell'umidità desiderata per impostazione predefinita */
+}
+
+/* Stili per le impostazioni manuali e automatiche dell'umidità */
+#manual-humidity-settings,
+#automatic-humidity-settings {
+    display: none; /* Nasconde le impostazioni manuali e automatiche dell'umidità per impostazione predefinita */
+}
+
+/* Nasconde gli elementi con la classe "hidden" */
+.hidden {
+    display: none;
+}
+
+/* Aggiungi altri stili CSS secondo necessità */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@media screen and (max-width: 600px) {
+    .container {
+        width: 95%; /* Larghezza pari al 95% dello schermo */
+        padding: 10px; /* Riduci il padding per una migliore visualizzazione su dispositivi mobili */
+    }
+
+    header {
+        display: flex; /* Utilizza un layout flessibile */
+        align-items: center; /* Allinea gli elementi verticalmente al centro */
+        justify-content: space-between; /* Spazio tra i due elementi all'interno dell'header */
+    }
+
+    header h1 {
+        font-size: 170%; /* Riduci la dimensione del testo per una migliore adattabilità */
+        margin-right: 10px; /* Aggiungi margine destro */
+    }
+
+    #settings-link {
+        margin-left: 10px; /* Aggiungi margine sinistro all'icona delle impostazioni */
+    }
+
+    nav ul {
+        display: flex; /* Utilizza un layout flessibile */
+        flex-wrap: wrap; /* Consente al contenuto di andare su più righe se necessario */
+        gap: 10px; /* Riduci la distanza tra gli elementi della lista */
+    }
+    
+    nav ul li {
+        flex: 1; /* Ogni voce di navigazione occupa lo stesso spazio */
+        min-height: 40px; /* Imposta un'altezza minima per evitare la sovrapposizione quando viene selezionata */
+    }
+
+    .section-container {
+        padding: 15px; /* Aumenta il padding per una migliore leggibilità */
+    }
+
+    .fa-home {
+        display: block; /* Visualizza l'icona della casa come blocco */
+        text-align: center; /* Centra l'icona della casa */
+        margin-bottom: 10px; /* Aggiunge spazio inferiore tra l'icona della casa e il testo */
+    }
+}
+

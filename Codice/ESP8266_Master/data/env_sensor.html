@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensori Ambientali</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sensori Ambientali <a href="settings.html" id="settings-link"><i class="fas fa-cogs" id="settings-icon"></i></a></h1>
+        </header>
+                
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="env_sensor.html">Ambiente</a></li>
+                <li><a href="soil_sensor.html">Terreno</a></li>
+                <li><a href="history.html">Cronologia</a></li> <!-- Modifica per collegare alla pagina Cronologia -->
+            </ul>
+        </nav>
+        <main>
+            <!-- Riquadro con media dei valori presi dai sensori -->
+            <section class="section-container" id="average-values">
+                <h2>Generale</h2>
+                <p><i class="fas fa-sun"></i> Luce Solare: <span id="average-light"></span></p>
+                <p><i class="fas fa-thermometer-half"></i> Temperatura: <span id="average-temperature"></span></p>
+                <p><i class="fas fa-tint"></i> Umidità: <span id="average-humidity"></span></p>
+                <p><i class="fas fa-wind"></i> Vento: <span id="average-wind"></span></p>
+                <p><i class="fas fa-tachometer-alt"></i> Pressione: <span id="average-pressure"></span></p>
+                <p><i class="fas fa-cloud"></i> Qualità Aria: <span id="average-air-quality"></span></p>
+            </section>
+
+            <!-- Riquadri per ogni sensore ESP -->
+            <section class="sensor-container" id="esp-sensors">
+                <!-- Qui andranno generati dinamicamente i riquadri per ogni sensore ESP -->
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Funzione per aggiornare i dati dei sensori ESP
+        function updateESPSensorData(espSensorData) {
+            // Aggiorna i riquadri dei sensori ESP
+            espSensorData.forEach(function(esp, index) {
+                var espContainer = document.createElement("div");
+                espContainer.classList.add("esp-box");
+                espContainer.setAttribute('data-index', index); // Aggiungi l'indice come attributo
+
+                var espName = document.createElement("h3");
+                espName.textContent = esp.name;
+                espContainer.appendChild(espName);
+
+                var toggleButton = document.createElement("button");
+                toggleButton.textContent = "Mostra/Nascondi Dati";
+                toggleButton.classList.add("toggle-esp-button");
+                espContainer.appendChild(toggleButton);
+
+                var dataContainer = document.createElement("div");
+                dataContainer.classList.add("esp-data-container");
+                espContainer.appendChild(dataContainer);
+
+                var lightValue = document.createElement("p");
+                lightValue.innerHTML = `<i class="fas fa-sun"></i> Luce Solare: ${esp.light}`;
+                dataContainer.appendChild(lightValue);
+
+                var temperatureValue = document.createElement("p");
+                temperatureValue.innerHTML = `<i class="fas fa-thermometer-half"></i> Temperatura: ${esp.temperature}`;
+                dataContainer.appendChild(temperatureValue);
+
+                var humidityValue = document.createElement("p");
+                humidityValue.innerHTML = `<i class="fas fa-tint"></i> Umidità: ${esp.humidity}`;
+                dataContainer.appendChild(humidityValue);
+
+                var windValue = document.createElement("p");
+                windValue.innerHTML = `<i class="fas fa-wind"></i> Vento: ${esp.wind}`;
+                dataContainer.appendChild(windValue);
+
+                var pressureValue = document.createElement("p");
+                pressureValue.innerHTML = `<i class="fas fa-tachometer-alt"></i> Pressione: ${esp.pressure}`;
+                dataContainer.appendChild(pressureValue);
+
+                var airQualityValue = document.createElement("p");
+                airQualityValue.innerHTML = `<i class="fas fa-cloud"></i> Qualità Aria: ${esp.airQuality}`;
+                dataContainer.appendChild(airQualityValue);
+
+                document.getElementById("esp-sensors").appendChild(espContainer);
+
+                // Aggiungi un gestore di eventi per il pulsante di visualizzazione/nascondimento dei dati
+                toggleButton.addEventListener('click', function() {
+                    if (dataContainer.style.display === 'none' || !dataContainer.style.display) {
+                        dataContainer.style.display = 'block';
+                    } else {
+                        dataContainer.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Esempio dati sensori ESP
+        var espSensorData = [
+            { name: "ESP1", light: "50 Lux", temperature: "25°C", humidity: "60%", wind: "10 km/h", pressure: "1013 hPa", airQuality: "Buona" },
+            { name: "ESP2", light: "60 Lux", temperature: "24°C", humidity: "55%", wind: "12 km/h", pressure: "1015 hPa", airQuality: "Moderata" },
+            { name: "ESP3", light: "45 Lux", temperature: "26°C", humidity: "58%", wind: "8 km/h", pressure: "1012 hPa", airQuality: "Buona" },
+            { name: "ESP4", light: "55 Lux", temperature: "23°C", humidity: "52%", wind: "11 km/h", pressure: "1014 hPa", airQuality: "Moderata" }
+            // Aggiungi altri dati dei sensori ESP qui...
+        ];
+
+        // Aggiorna i dati dei sensori ESP
+        updateESPSensorData(espSensorData);
+    </script>
+</body>
+</html>

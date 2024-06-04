@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irrigazione Automatica</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Irrigazione Automatica <a href="settings.html" id="settings-link"><i class="fas fa-cogs" id="settings-icon"></i></a></h1>
+        </header>
+                
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+            </ul>
+        </nav>
+        <main id="esp-sections">
+            <!-- Qui vengono generati dinamicamente i riquadri ESP -->
+        </main>
+    </div>
+
+    <script>
+        // Simula dati dall'ESP
+        var espData = [
+            {
+                name: "ESP 1",
+                batteryStatus: "Batteria",
+                batteryLevel: "90%",
+                batteryAutonomy: "N/A", // Autonomia della batteria, impostata su "N/A" per alimentazione da rete elettrica
+            },
+            {
+                name: "ESP 2",
+                batteryStatus: "Rete elettrica",
+                batteryLevel: "80%",
+                batteryAutonomy: "N/A", // Autonomia della batteria, impostata su "N/A" per alimentazione da rete elettrica
+            }
+            // Aggiungi altri dati per gli ESP aggiuntivi...
+        ];
+
+        // Funzione per creare i riquadri per gli ESP
+function createEspSections(espData) {
+    var mainElement = document.getElementById("esp-sections");
+
+    espData.forEach(function(esp, index) {
+        var section = document.createElement("section");
+        section.classList.add("section-container");
+        section.id = "esp" + (index + 1) + "-battery";
+
+        var h2 = document.createElement("h2");
+        var icon = document.createElement("i");
+        icon.classList.add("fas");
+        // Cambia l'icona in base al tipo di alimentazione
+        switch (esp.batteryStatus) {
+            case "Rete elettrica":
+                icon.classList.add("fa-plug");
+                break;
+            case "Batteria":
+                icon.classList.add("fa-battery-full");
+                break;
+            default:
+                icon.classList.add("fa-question");
+                break;
+        }
+        h2.appendChild(icon);
+        h2.innerHTML += " " + esp.name;
+
+        var p1 = document.createElement("p");
+        p1.innerHTML = "Stato: <span id='esp" + (index + 1) + "-battery-status'>" + esp.batteryStatus + "</span>";
+
+        var p2 = document.createElement("p");
+        p2.innerHTML = "Livello: <span id='esp" + (index + 1) + "-battery-level'>" + esp.batteryLevel + "</span>";
+
+        var p3 = document.createElement("p");
+        p3.innerHTML = "Autonomia: <span id='esp" + (index + 1) + "-battery-autonomy'>" + esp.batteryAutonomy + "</span>";
+
+        // Nascondi i paragrafi di dati aggiungendo la classe "hidden"
+        p1.classList.add("hidden");
+        p2.classList.add("hidden");
+        p3.classList.add("hidden");
+
+        var toggleButton = document.createElement("button");
+        toggleButton.textContent = "Mostra/Nascondi Dati";
+        toggleButton.classList.add("toggle-esp-button");
+        toggleButton.addEventListener("click", function() {
+            toggleDataVisibility(index);
+        });
+
+        section.appendChild(h2);
+        section.appendChild(p1);
+        section.appendChild(p2);
+        section.appendChild(p3);
+        section.appendChild(toggleButton); // Aggiunta del pulsante Mostra/Nascondi Dati
+
+        mainElement.appendChild(section);
+    });
+}
+
+// Funzione per nascondere o mostrare i dati dell'ESP
+function toggleDataVisibility(index) {
+    var sectionId = "esp" + (index + 1) + "-battery";
+    var section = document.getElementById(sectionId);
+    var dataElements = section.querySelectorAll("p:not(:first-child)");
+    dataElements.forEach(function(element) {
+        element.classList.toggle("hidden");
+    });
+}
+
+
+        // Aggiorna i dati dell'interfaccia utente
+        createEspSections(espData); // Chiamata iniziale per creare i riquadri ESP
+    </script>
+</body>
+</html>

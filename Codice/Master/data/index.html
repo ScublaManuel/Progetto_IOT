@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irrigazione Automatica</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Irrigazione Automatica <a href="settings.html" id="settings-link"><i class="fas fa-cogs" id="settings-icon"></i></a></h1>
+        </header>
+                
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="env_sensor.html">Ambiente</a></li>
+                <li><a href="soil_sensor.html">Terreno</a></li>
+                <li><a href="history.html">Cronologia</a></li> <!-- Modifica per collegare alla pagina Cronologia -->
+            </ul>
+        </nav>
+        <main>
+            
+        
+            <!-- Livello di Carica della Batteria -->
+            <section class="section-container" id="battery">
+                <h2><i id="battery-icon"></i></h2>
+                <p><i id="battery-icon"></i> Stato: <span id="battery-status"></span></p>
+                <p><i id="battery-icon"></i> Livello: <span id="battery-level"></span></p>
+                <p><i id="battery-icon"></i> Autonomia: <span id="battery-autonomy"></span></p>
+                <p><a href="power_supply_slave.html">Dettagli alimentazione slave</a></p> <!-- Link alla pagina alimentazione slave -->
+            </section>
+
+            <!-- Data e Ora -->
+            <section class="section-container" id="datetime">
+                <p><i class="far fa-clock"></i> Ora attuale: <span id="current-time"></span></p>
+                <p><i class="far fa-calendar-alt"></i> Data attuale: <span id="current-date"></span></p>
+            </section>
+        
+            <!-- Messaggi di Errore -->
+            <section class="section-container" id="error-messages">
+                <h2><i class="far fa-bell"></i></h2>
+                <div id="error-banner"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Funzione per recuperare i dati dall'ESP tramite una richiesta POST
+        async function fetchData() {
+            try {
+                // Effettua la richiesta POST al server ESP
+                const response = await fetch('/getData', {
+                    method: 'POST',
+                });
+                // Converte la risposta in formato JSON
+                const data = await response.json();
+                // Aggiorna l'interfaccia utente con i dati ricevuti
+                updateUI(data);
+            } catch (error) {
+                console.error('Errore nel recupero dei dati:', error);
+            }
+        }
+
+        // Funzione per visualizzare i dati
+        function updateUI(data) {
+            document.getElementById("current-time").textContent = data.currentTime;
+            document.getElementById("current-date").textContent = data.currentDate;
+            document.getElementById("battery-status").textContent = data.batteryStatus;
+            document.getElementById("battery-level").textContent = data.batteryLevel;
+            document.getElementById("battery-autonomy").textContent = data.batteryAutonomy;
+
+            // Aggiorna l'icona dell'alimentazione in base allo stato
+            var batteryIcon = document.getElementById("battery-icon");
+            switch (data.batteryStatus) {
+                case "Rete elettrica":
+                    batteryIcon.innerHTML = '<i class="fas fa-plug"></i>';
+                    break;
+                case "Batteria":
+                    batteryIcon.innerHTML = '<i class="fas fa-battery-full"></i>';
+                    break;
+                default:
+                    batteryIcon.innerHTML = '<i class="fas fa-question"></i>'; // Icona generica per altri stati
+                    break;
+            }
+
+            // Aggiorna messaggi di errore
+            var errorBanner = document.getElementById("error-banner");
+            errorBanner.innerHTML = "";
+            data.errorMessages.forEach(function(error) {
+                var errorMessage = document.createElement("p");
+                errorMessage.textContent = error.message;
+                errorMessage.classList.add("error-message");
+
+                // Aggiunge la classe di colore in base al tipo di errore
+                errorMessage.classList.add("error-" + error.type);
+
+                errorBanner.appendChild(errorMessage);
+            });
+        }
+
+        // Recupera i dati ogni 5 secondi
+        setInterval(fetchData, 5000);
+
+        // Recupero iniziale dei dati per popolare l'interfaccia utente
+        fetchData();
+    </script>
+</body>
+</html>

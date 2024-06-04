@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensori del Terreno</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sensori del Terreno <a href="settings.html" id="settings-link"><i class="fas fa-cogs" id="settings-icon"></i></a></h1>
+        </header>
+                
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="env_sensor.html">Ambiente</a></li>
+                <li><a href="soil_sensor.html">Terreno</a></li>
+                <li><a href="history.html">Cronologia</a></li> <!-- Modifica per collegare alla pagina Cronologia -->
+            </ul>
+        </nav>
+        <main>
+            <!-- Riquadro con media dei valori presi dai sensori -->
+            <section class="section-container" id="average-values">
+                <h2>Generale</h2>
+                <p><i class="fas fa-thermometer-half"></i> Temperatura Terreno: <span id="average-temperature"></span></p>
+                <p><i class="fas fa-tint"></i> Umidità Terreno: <span id="average-humidity"></span></p>
+                <p><i class="fas fa-water"></i> Livello Acqua Cisterna: <span id="water-level"></span></p>
+                <p><i class="fas fa-bolt"></i> Valvole Attive: <span id="valve-status"></span></p>
+                <p><i class="far fa-clock"></i> Ultima Irrigazione: <span id="last-valve-activation"></span></p>
+                <!-- Impostazione umidità desiderata -->
+                <div id="desired-humidity-container" style="display: none;">
+                    <p><i class="fa fa-cog" aria-hidden="true"></i> Modalità:</p>
+                    <select id="humidity-mode" onchange="toggleHumidityMode()">
+                        <option value="">Seleziona modalità</option>
+                        <option value="manual">Manuale</option>
+                        <option value="automatic">Automatica</option>
+                    </select>
+                    <div id="manual-humidity-settings" style="display: none;">
+                        <!-- Aggiungi i campi per l'impostazione manuale -->
+                        <label for="irrigation-time-input">Orario di Irrigazione:</label>
+                        <input type="time" id="irrigation-time-input"><br>
+                        <label for="irrigation-duration-input">Durata dell'Irrigazione (minuti):</label>
+                        <input type="number" id="irrigation-duration-input" placeholder="Inserisci la durata"><br>
+                        <label>Giorni di Irrigazione:</label>
+                        <div id="manual-days-checkboxes">
+                            <label><input type="checkbox" name="irrigation-days[]" value="Lun"> Lun</label>
+                            <label><input type="checkbox" name="irrigation-days[]" value="Mar"> Mar</label>
+                            <label><input type="checkbox" name="irrigation-days[]" value="Mer"> Mer</label>
+                            <label><input type="checkbox" name="irrigation-days[]" value="Gio"> Gio</label>
+                            <label><input type="checkbox" name="irrigation-days[]" value="Ven"> Ven</label>
+                            <label><input type="checkbox" name="irrigation-days[]" value="Sab"> Sab</label>
+                            <label><input type="checkbox" name="irrigation-days[]" value="Dom"> Dom</label>
+                        </div>
+                        <label for="sensor-selection">Sensore:</label>
+                        <select id="sensor-selection">
+                            <option value="">Seleziona sensore</option>
+                            <option value="ESP1">ESP1</option>
+                            <option value="ESP2">ESP2</option>
+                            <option value="ESP3">ESP3</option>
+                            <option value="ESP4">ESP4</option>
+                        </select>
+                    </div>
+                    <div id="automatic-humidity-settings" style="display: none;">
+                        <!-- Mantieni il campo per l'impostazione automatica -->
+                        <label for="desired-humidity">Umidità Desiderata:</label>
+                        <input type="number" id="desired-humidity" placeholder="Inserisci valore (percentuale)" min="0" max="100"><br>
+                        <label for="sensor-selection-auto">Sensore:</label>
+                        <select id="sensor-selection-auto">
+                            <option value="">Seleziona sensore</option>
+                            <option value="ESP1">ESP1</option>
+                            <option value="ESP2">ESP2</option>
+                            <option value="ESP3">ESP3</option>
+                            <option value="ESP4">ESP4</option>
+                        </select>
+                    </div>
+                    <button onclick="setDesiredHumidity()">Imposta</button>
+                </div>
+                <button onclick="toggleDesiredHumidity()">Impostazione irrigazione</button>
+            </section>
+
+            <!-- Riquadri per ogni sensore ESP -->
+            <section class="sensor-container" id="esp-sensors">
+                <!-- Qui andranno generati dinamicamente i riquadri per ogni sensore ESP -->
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Funzione per impostare l'umidità desiderata e refreshare la pagina
+        function setDesiredHumidity() {
+            var desiredHumidityInput = document.getElementById("desired-humidity");
+            var desiredHumidity = desiredHumidityInput.value.trim(); // Rimuovi spazi vuoti prima e dopo il valore
+            var selectedSensorManual = document.getElementById("sensor-selection").value;
+            var selectedSensorAuto = document.getElementById("sensor-selection-auto").value;
+            var mode = document.getElementById("humidity-mode").value;
+
+            // Verifica se è stata selezionata una modalità
+            if (mode === "") {
+                alert("Seleziona una modalità per l'impostazione dell'umidità desiderata.");
+                return;
+            }
+
+            if (mode === "manual") {
+                var irrigationTime = document.getElementById("irrigation-time-input").value;
+                var irrigationDays = Array.from(document.querySelectorAll('input[name="irrigation-days[]"]:checked')).map(e => e.value);
+                var irrigationDuration = document.getElementById("irrigation-duration-input").value;
+
+                // Verifica se tutti i campi sono compilati
+                if (irrigationTime === "" || irrigationDays.length === 0 || irrigationDuration === "" || selectedSensorManual === "") {
+                    alert("Compila tutti i campi per l'impostazione manuale dell'irrigazione.");
+                    return;
+                }
+
+                console.log("Impostazione manuale - Orario di Irrigazione:", irrigationTime);
+                console.log("Impostazione manuale - Giorni di Irrigazione:", irrigationDays.join(", "));
+                console.log("Impostazione manuale - Durata dell'Irrigazione:", irrigationDuration + " minuti");
+                console.log("Impostazione manuale - Sensore:", selectedSensorManual);
+            } else if (mode === "automatic") {
+                if (desiredHumidity === "" || selectedSensorAuto === "") {
+                    alert("Compila tutti i campi per l'impostazione automatica dell'umidità desiderata.");
+                    return;
+                }
+
+                // Verifica se il valore inserito è un numero compreso tra 0 e 100
+                if (isNaN(desiredHumidity) || parseFloat(desiredHumidity) < 0 || parseFloat(desiredHumidity) > 100) {
+                    alert("Inserisci un valore numerico compreso tra 0 e 100 per l'umidità desiderata nella modalità automatica.");
+                    desiredHumidityInput.focus();
+                    return;
+                }
+                console.log("Impostazione automatica - Umidità Desiderata:", desiredHumidity + "%");
+                console.log("Impostazione automatica - Sensore selezionato:", selectedSensorAuto);
+            }
+
+            // Invia i dati direttamente all'ESP
+            sendDataToESP(desiredHumidity, selectedSensorManual, selectedSensorAuto, mode);
+        }
+
+        // Funzione per inviare i dati direttamente all'ESP
+        function sendDataToESP(desiredHumidity, selectedSensorManual, selectedSensorAuto, mode) {
+            // Esegui una richiesta HTTP all'ESP per inviare i dati
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/set-humidity", true); // Assicurati che "/set-humidity" sia la rotta corretta sull'ESP per ricevere i dati
+            xhr.setRequestHeader("Content-Type", "application/json");
+            
+            // Crea un oggetto con i dati da inviare
+            var data = {
+                desiredHumidity: desiredHumidity,
+                selectedSensorManual: selectedSensorManual,
+                selectedSensorAuto: selectedSensorAuto,
+                mode: mode
+            };
+            
+            // Converti l'oggetto in formato JSON
+            var jsonData = JSON.stringify(data);
+            console.log('Dati da inviare: ',jsonData )
+            
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                    console.log('POST request successful');
+                    console.log(xhr.responseText);
+                    } else {
+                    console.log('POST request failed with status ' + xhr.status);
+                    }
+                }
+            };
+            xhr.send(jsonData);
+        }
+
+        // Funzione per passare tra la modalità di impostazione manuale e automatica
+        function toggleHumidityMode() {
+            var mode = document.getElementById("humidity-mode").value;
+            var manualSettings = document.getElementById("manual-humidity-settings");
+            var automaticSettings = document.getElementById("automatic-humidity-settings");
+
+            if (mode === "manual") {
+                manualSettings.style.display = "block";
+                automaticSettings.style.display = "none";
+            } else if (mode === "automatic") {
+                manualSettings.style.display = "none";
+                automaticSettings.style.display = "block";
+            }
+        }
+
+        // Funzione per mostrare o nascondere l'impostazione dell'umidità desiderata
+        function toggleDesiredHumidity() {
+            var desiredHumidityContainer = document.getElementById("desired-humidity-container");
+            if (desiredHumidityContainer.style.display === 'none' || !desiredHumidityContainer.style.display) {
+                desiredHumidityContainer.style.display = 'block';
+            } else {
+                desiredHumidityContainer.style.display = 'none';
+            }
+        }
+
+        // Funzione per aggiornare i dati dei sensori ESP
+        function updateESPSensorData(espSensorData) {
+            // Aggiorna i riquadri dei sensori ESP
+            espSensorData.forEach(function(esp, index) {
+                var espContainer = document.createElement("div");
+                espContainer.classList.add("esp-box");
+                espContainer.setAttribute('data-index', index); // Aggiungi l'indice come attributo
+
+                var espName = document.createElement("h3");
+                espName.textContent = esp.name;
+                espContainer.appendChild(espName);
+
+                var toggleButton = document.createElement("button");
+                toggleButton.textContent = "Mostra/Nascondi Dati";
+                toggleButton.classList.add("toggle-esp-button");
+                espContainer.appendChild(toggleButton);
+
+                var dataContainer = document.createElement("div");
+                dataContainer.classList.add("esp-data-container");
+                espContainer.appendChild(dataContainer);
+
+                var temperatureValue = document.createElement("p");
+                temperatureValue.innerHTML = `<i class="fas fa-thermometer-half"></i> Temperatura Terreno: ${esp.temperature}`;
+                dataContainer.appendChild(temperatureValue);
+
+                var humidityValue = document.createElement("p");
+                humidityValue.innerHTML = `<i class="fas fa-tint"></i> Umidità Terreno: ${esp.humidity}`;
+                dataContainer.appendChild(humidityValue);
+
+                var valveStatus = document.createElement("p");
+                valveStatus.innerHTML = `<i class="fas fa-seedling"></i> Irrigazione: ${esp.valveStatus}`;
+                dataContainer.appendChild(valveStatus);
+
+                // Aggiungi il valore di umidità desiderata solo se è presente
+                if (esp.irrigationMode) {
+                    var irrigationMode = document.createElement("p");
+                    irrigationMode.innerHTML = `<i class="fas fa-spray-can"></i> Modalità Irrigazione: ${esp.irrigationMode}`;
+                    dataContainer.appendChild(irrigationMode);
+
+                    if (esp.irrigationMode === "Manuale") {
+                        var irrigationTime = document.createElement("p");
+                        irrigationTime.innerHTML = `<i class="far fa-clock"></i> Orario di Irrigazione: ${esp.irrigationTime}`;
+                        dataContainer.appendChild(irrigationTime);
+
+                        var irrigationDays = document.createElement("p");
+                        irrigationDays.innerHTML = `<i class="far fa-calendar-alt"></i> Giorni di Irrigazione: ${esp.irrigationDays.join(" ")}`;
+                        dataContainer.appendChild(irrigationDays);
+
+                        var irrigationDuration = document.createElement("p");
+                        irrigationDuration.innerHTML = `<i class="far fa-clock"></i> Durata dell'Irrigazione: ${esp.irrigationDuration} minuti`;
+                        dataContainer.appendChild(irrigationDuration);
+                    } else {
+                        var desiredHumidityValue = document.createElement("p");
+                        desiredHumidityValue.innerHTML = `<i class="fas fa-wrench"></i> Umidità Desiderata: ${esp.desiredHumidity}`;
+                        dataContainer.appendChild(desiredHumidityValue);
+                    }
+                }
+
+                document.getElementById("esp-sensors").appendChild(espContainer);
+
+                // Aggiungi un gestore di eventi per il pulsante di visualizzazione/nascondimento dei dati
+                toggleButton.addEventListener('click', function() {
+                    if (dataContainer.style.display === 'none' || !dataContainer.style.display) {
+                        dataContainer.style.display = 'block';
+                    } else {
+                        dataContainer.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Esempio dati sensori ESP
+        var espSensorData = [
+            { name: "ESP1", temperature: "25°C", humidity: "60%", valveStatus: "Attiva", desiredHumidity: "50%", irrigationTime: "07:00", irrigationDays: ["Lun", "Mer", "Ven"], irrigationDuration: "10", irrigationMode: "Manuale" },
+            { name: "ESP2", temperature: "24°C", humidity: "55%", valveStatus: "Disattiva", desiredHumidity: "55%" },
+            { name: "ESP3", temperature: "26°C", humidity: "58%", valveStatus: "Attiva", desiredHumidity: "60%", irrigationTime: "06:30", irrigationDays: ["Mar", "Gio", "Sab"], irrigationMode: "Automatico" },
+            { name: "ESP4", temperature: "23°C", humidity: "52%", valveStatus: "Disattiva", desiredHumidity: "45%", irrigationMode: "Manuale" }
+            // Aggiungi altri dati dei sensori ESP qui...
+        ];
+
+        // Aggiorna i dati dei sensori ESP
+        updateESPSensorData(espSensorData);
+    </script>
+</body>
+</html>

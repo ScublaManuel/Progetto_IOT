@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impostazioni - Irrigazione Automatica</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fontawesome/css/all.min.css">
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Impostazioni <a href="#" id="home-link"><i class="fas fa-home"></i></a></h1>
+        </header>
+        <main>
+            <section id="datetime-settings">
+                <h2>Data e Ora</h2>
+                <form id="datetime-form">
+                    <label for="date">Data:</label>
+                    <input type="date" id="date" name="date" required><br><br>
+                    <label for="time">Ora:</label>
+                    <input type="time" id="time" name="time" required><br><br>
+                    <button type="submit" id="save-button">Salva ed esci</button>
+                    <button type="button" id="cancel-button">Esci senza salvare</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("home-link").addEventListener("click", function(event) {
+                event.preventDefault();
+                window.location.href = "index.html";
+            });
+
+            document.getElementById("cancel-button").addEventListener("click", function(event) {
+                event.preventDefault();
+                window.location.href = "index.html";
+            });
+
+            document.getElementById("datetime-form").addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                if (document.getElementById("date").value === "" || document.getElementById("time").value === "") {
+                    alert("Per favore inserisci tutti i campi!");
+                    return;
+                }
+
+                var date = document.getElementById("date").value;
+                var time = document.getElementById("time").value;
+
+                var data = {
+                    date: date,
+                    time: time
+                };
+
+                fetch("url_del_tuo_server", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    console.log("Dati inviati con successo al server.");
+                })
+                .catch(error => {
+                    console.error("Si è verificato un errore durante l'invio dei dati al server:", error);
+                })
+                .finally(() => {
+                    window.location.href = "index.html"; // Reindirizza alla home indipendentemente dal successo del salvataggio
+                });
+            });
+        });
+    </script>
+</body>
+</html>
